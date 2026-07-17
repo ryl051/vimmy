@@ -9,8 +9,10 @@ int main(int argc, char *argv[]) {
     getWindowSize();
 
     Buffer buf = {NULL, 0};
-    if (argc >= 2)
+    if (argc >= 2) {
         openFile(&buf, argv[1]);
+		filename = argv[1];
+	}
 
     while (1) {
         char c;
@@ -68,9 +70,15 @@ int main(int argc, char *argv[]) {
                         }
                     }
                 }
+				case ':': {
+					mode = COMMAND_MODE;
+					cmd_buf[0] = '\0';
+					cmd_len = 0;
+					break;
+				}
             }
             // insert mode
-        } else {
+        } else if (mode == INSERT_MODE) {
             switch (c) {
                 case '\x1b': {
                     mode = NORMAL_MODE;
@@ -119,6 +127,45 @@ int main(int argc, char *argv[]) {
                     break;
                 }
             }
-        }
+		// COMMAND MODE
+        } else {
+			switch(c) {
+				// escape to cancel the command
+				case '\x1b': {
+					mode = NORMAL_MODE;
+					break;
+				}
+				case '\r':
+				case '\n': {
+					cmd_buf[cmd_len] = '\0';
+					if (strcmp(cmd_buf, "w") == 0) {
+						saveFile(&buf);
+					} else if (strcmp(cmd_buf, "q") == 0) {
+						disableRawMode();
+						exit(0);
+					}
+					mode = NORMAL_MODE;
+					break;
+				}
+				case '\b':
+				case '\x7f': {
+					if (cmd_len > 0) {
+						cmd_len--;
+						cmd_buf[cmd_len] = '\0';
+					} else {
+						mode = NORMAL_MODE;
+					}
+					break;
+				}
+				default: {
+					// prevent buffer overflow
+					if (cmd_len < (int)sizeof(cmd_buf) - 1) {
+						cmd_buf[cmd_len++] = c;
+						cmd_buf[cmd_len] = '\0';
+					}
+					break;
+				}
+			}
+		}
     }
 }

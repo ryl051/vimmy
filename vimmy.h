@@ -61,4 +61,14 @@ void buffer_delete_row(Buffer *buf, int cy);
 /*
  * used for enter in insert mode
  */
+<<<<<<< Updated upstream
 void buffer_insert_row(Buffer *buf, int at_idx, char* text, size_t len);
+=======
+void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len);
+
+/*
+ * used to save file with :w
+ */
+
+void saveFile(Buffer *buf);
+>>>>>>> Stashed changes

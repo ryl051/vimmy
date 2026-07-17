@@ -13,6 +13,11 @@ struct termios orig_termios;
 int cx, cy;
 Mode mode = NORMAL_MODE;
 
+// for command mode
+char *filename = NULL;
+char cmd_buf[80];
+uint32_t cmd_len = 0;
+
 void disableRawMode() {
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios); 
 }
@@ -48,11 +53,41 @@ void refreshScreen(Buffer *buf) {
         }
     }
 
+<<<<<<< Updated upstream
     char cursorBuf[32];
     int len =
         snprintf(cursorBuf, sizeof(cursorBuf), "\x1b[%d;%dH", cy + 1, cx + 1);
     write(STDOUT_FILENO, cursorBuf, len);
     write(STDOUT_FILENO, "\x1b[?25h", 6); // show cursor
+=======
+	// for command mode, draw the bottom line
+	if (mode == COMMAND_MODE) {
+		char status[120];
+		uint32_t len = snprintf(status, sizeof(status), ":%s", cmd_buf);
+		write(STDOUT_FILENO, status, len);
+	} else {
+		char* status;
+		if (mode == NORMAL_MODE) {
+			status = "-- INSERT --";
+		} else {
+			status = "-- NORMAL --";
+		}
+		write(STDOUT_FILENO, status, strlen(status));
+	}
+	write(STDOUT_FILENO, "\x1b[K", 3); // clear rest of the bottom line...?
+
+	// position cursor
+	char cursorBuf[32];
+	uint32_t len;
+	if (mode == COMMAND_MODE) {
+		len = snprintf(cursorBuf, sizeof(cursorBuf), "\x1b[%d;%dH", window_size.ws_row, cmd_len + 2);
+	} else {
+		len = snprintf(cursorBuf, sizeof(cursorBuf), "\x1b[%d;%dH", cy + 1, cx + 1);
+	}
+
+	write(STDOUT_FILENO, cursorBuf, len);
+	write(STDOUT_FILENO, "\x1b[?25h", 6);
+>>>>>>> Stashed changes
 }
 
 int getWindowSize() {
@@ -143,4 +178,23 @@ void buffer_insert_row(Buffer *buf, int at_idx, char* text, size_t len) {
 	buf->rows[at_idx].chars[len] = '\0';
 
 	buf->num_rows++;
+}
+
+void saveFile(Buffer *buf) {
+	if (filename == NULL) {
+		// prompt filename here in the future?
+		return;
+	}
+
+	FILE *fp = fopen(filename, "w");
+	if (!fp) {
+		perror("Failed to open file for writing!");
+		return;
+	}
+
+	for (uint32_t i = 0; i < buf->num_rows; i++) {
+		fprintf(fp, "%s\n", buf->rows[i].chars);
+	}
+
+	fclose(fp);
 }
