@@ -4,10 +4,17 @@ CFLAGS = -Wall -g
 
 TARGET = a
 
+SRCS = main.c vimmy.c
+OBJS = $(SRCS:.c=.o)
+HEADERS = vimmy.h
+
 all: $(TARGET)
 
-$(TARGET): vimmy.c
-	$(CC) $(CFLAGS) -o $(TARGET) vimmy.c
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean: 
-	rm -r $(TARGET)
+	rm -f $(TARGET) $(OBJS)
