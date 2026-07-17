@@ -13,7 +13,6 @@ struct termios orig_termios;
 uint32_t cx, cy;
 Mode mode = NORMAL_MODE;
 
-// for command mode
 char *filename = NULL;
 char cmd_buf[80];
 uint32_t cmd_len = 0;
@@ -24,7 +23,7 @@ void disableRawMode() {
 
 void enableRawMode() {
     tcgetattr(STDIN_FILENO, &orig_termios);
-    atexit(disableRawMode); // restore terminal on exit
+    atexit(disableRawMode);
 
     struct termios raw = orig_termios;
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -53,7 +52,6 @@ void refreshScreen(Buffer *buf) {
         }
     }
 
-	// for command mode, draw the bottom line
 	if (mode == COMMAND_MODE) {
 		char status[120];
 		uint32_t len = snprintf(status, sizeof(status), ":%s", cmd_buf);
@@ -67,9 +65,8 @@ void refreshScreen(Buffer *buf) {
 		}
 		write(STDOUT_FILENO, status, strlen(status));
 	}
-	write(STDOUT_FILENO, "\x1b[K", 3); // clear rest of the bottom line...?
+	write(STDOUT_FILENO, "\x1b[K", 3);
 
-	// position cursor
 	char cursorBuf[32];
 	uint32_t len;
 	if (mode == COMMAND_MODE) {
@@ -102,7 +99,6 @@ void openFile(Buffer *buf, const char *filename) {
     ssize_t linelen;
 
     while ((linelen = getline(&line, &linecap, fp)) != -1) {
-        /* strip trailing newline */
         while (linelen > 0 &&
                (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
             linelen--;
@@ -154,16 +150,13 @@ void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len) {
 		return;
 	}
 
-	// Grow the array of Row structs by 1
 	buf->rows = realloc(buf->rows, sizeof(Row) * (buf->num_rows + 1));
 
-	// Shift all rows below at_idx down by one to open up a gap
 	uint32_t num_rows_to_move = buf->num_rows - at_idx;
 	if (num_rows_to_move > 0) {
 		memmove(&buf->rows[at_idx + 1], &buf->rows[at_idx], sizeof(Row) * num_rows_to_move);
 	}
 	
-	// init new row
 	buf->rows[at_idx].len = len;
 	buf->rows[at_idx].chars = malloc(len + 1);
 	memcpy(buf->rows[at_idx].chars, text, len);
@@ -174,7 +167,7 @@ void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len) {
 
 void saveFile(Buffer *buf) {
 	if (filename == NULL) {
-		// prompt filename here in the future?
+		// TODO: prompt filename here in the future?
 		return;
 	}
 
