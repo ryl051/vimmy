@@ -10,7 +10,7 @@
 struct winsize window_size;
 struct termios orig_termios;
 
-int cx, cy;
+uint32_t cx, cy;
 Mode mode = NORMAL_MODE;
 
 void disableRawMode() {
@@ -36,7 +36,7 @@ void refreshScreen(Buffer *buf) {
     write(STDOUT_FILENO, "\x1b[?25l", 6); // hide cursor
     write(STDOUT_FILENO, "\x1b[H", 3);    // move to top-left
 
-    for (int i = 0; i < window_size.ws_row; i++) {
+    for (uint32_t i = 0; i < window_size.ws_row; i++) {
         if (i < buf->num_rows) {
             write(STDOUT_FILENO, buf->rows[i].chars, buf->rows[i].len);
         } else {
@@ -49,13 +49,13 @@ void refreshScreen(Buffer *buf) {
     }
 
     char cursorBuf[32];
-    int len =
+    int32_t len =
         snprintf(cursorBuf, sizeof(cursorBuf), "\x1b[%d;%dH", cy + 1, cx + 1);
     write(STDOUT_FILENO, cursorBuf, len);
     write(STDOUT_FILENO, "\x1b[?25h", 6); // show cursor
 }
 
-int getWindowSize() {
+int32_t getWindowSize() {
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window_size) != 0) {
         perror("ioctl failed!");
         return 1;
@@ -93,8 +93,8 @@ void openFile(Buffer *buf, const char *filename) {
     fclose(fp);
 }
 
-void row_delete_char(Row *row, int cx) {
-    if (cx <= 0 || cx > row->len)
+void row_delete_char(Row *row, uint32_t cx) {
+    if (cx == 0 || cx > row->len)
         return;
 
     memmove(&row->chars[cx - 1], &row->chars[cx], row->len - cx + 1);
@@ -103,11 +103,11 @@ void row_delete_char(Row *row, int cx) {
     row->chars = realloc(row->chars, row->len + 1);
 }
 
-void buffer_delete_row(Buffer *buf, int cy) {
-    if (cy < 0 || cy >= buf->num_rows)
+void buffer_delete_row(Buffer *buf, uint32_t cy) {
+    if (cy >= buf->num_rows)
         return;
 
-    int num_rows_to_move = buf->num_rows - cy - 1;
+    int32_t num_rows_to_move = buf->num_rows - cy - 1;
     if (num_rows_to_move > 0) {
         memmove(&buf->rows[cy], &buf->rows[cy + 1], sizeof(Row) * num_rows_to_move);
     }
@@ -122,8 +122,8 @@ void buffer_delete_row(Buffer *buf, int cy) {
     }
 }
 
-void buffer_insert_row(Buffer *buf, int at_idx, char* text, size_t len) {
-	if (at_idx < 0 || at_idx > buf->num_rows) {
+void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len) {
+	if (at_idx > buf->num_rows) {
 		return;
 	}
 
@@ -131,7 +131,7 @@ void buffer_insert_row(Buffer *buf, int at_idx, char* text, size_t len) {
 	buf->rows = realloc(buf->rows, sizeof(Row) * (buf->num_rows + 1));
 
 	// Shift all rows below at_idx down by one to open up a gap
-	int num_rows_to_move = buf->num_rows - at_idx;
+	uint32_t num_rows_to_move = buf->num_rows - at_idx;
 	if (num_rows_to_move > 0) {
 		memmove(&buf->rows[at_idx + 1], &buf->rows[at_idx], sizeof(Row) * num_rows_to_move);
 	}
