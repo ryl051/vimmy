@@ -68,3 +68,8 @@ void buffer_delete_row(Buffer *buf, uint32_t cy);
  * used for enter in insert mode
  */
 void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len);
+
+/*
+ * used to save file with :w
+ */
+void saveFile(Buffer *buf);
