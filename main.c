@@ -76,6 +76,8 @@ int main(int argc, char *argv[]) {
                     mode = NORMAL_MODE;
                     break;
                 }
+
+				// backspace
                 case '\b':
                 case '\x7f': {
                     if (cx > 0) {
@@ -85,6 +87,27 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
+				case '\r':
+				case '\n': {
+					Row *row = &buf.rows[cy];
+
+					// split the current row at character cx
+					// aka everything from cx + 1 goes onto new line
+					char *split_text = &row->chars[cx];
+					int split_len = row->len - cx;
+
+					buffer_insert_row(&buf, cy + 1, split_text, split_len);
+
+					// truncate the original row
+					row = &buf.rows[cy];
+					row->len = cx;
+					row->chars = realloc(row->chars, row->len + 1);
+					row->chars[row->len] = '\0';
+
+					cy++;
+					cx = 0;
+					break;
+				}
                 default: {
                     // insert actual character
                     Row *row = &buf.rows[cy];

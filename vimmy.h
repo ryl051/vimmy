@@ -57,3 +57,8 @@ void row_delete_char(Row *row, int cx);
  * used for dd in normal mode
  */
 void buffer_delete_row(Buffer *buf, int cy);
+
+/*
+ * used for enter in insert mode
+ */
+void buffer_insert_row(Buffer *buf, int at_idx, char* text, size_t len);

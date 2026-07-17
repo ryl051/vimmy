@@ -121,3 +121,26 @@ void buffer_delete_row(Buffer *buf, int cy) {
         buf->rows = realloc(buf->rows, sizeof(Row) * buf->num_rows);
     }
 }
+
+void buffer_insert_row(Buffer *buf, int at_idx, char* text, size_t len) {
+	if (at_idx < 0 || at_idx > buf->num_rows) {
+		return;
+	}
+
+	// Grow the array of Row structs by 1
+	buf->rows = realloc(buf->rows, sizeof(Row) * (buf->num_rows + 1));
+
+	// Shift all rows below at_idx down by one to open up a gap
+	int num_rows_to_move = buf->num_rows - at_idx;
+	if (num_rows_to_move > 0) {
+		memmove(&buf->rows[at_idx + 1], &buf->rows[at_idx], sizeof(Row) * num_rows_to_move);
+	}
+	
+	// init new row
+	buf->rows[at_idx].len = len;
+	buf->rows[at_idx].chars = malloc(len + 1);
+	memcpy(buf->rows[at_idx].chars, text, len);
+	buf->rows[at_idx].chars[len] = '\0';
+
+	buf->num_rows++;
+}
