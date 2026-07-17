@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case 'd': {
-                    // wait for another input
+                    // wait for another input if we're trying to delete
                     while (1) {
                         char cc;
                         refreshScreen(&buf);
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 					// split the current row at character cx
 					// aka everything from cx + 1 goes onto new line
 					char *split_text = &row->chars[cx];
-					int split_len = row->len - cx;
+					uint32_t split_len = row->len - cx;
 
 					buffer_insert_row(&buf, cy + 1, split_text, split_len);
 

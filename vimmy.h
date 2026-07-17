@@ -1,28 +1,34 @@
 #define CLEAR_SCREEN "\x1b[2J"
 
 #include <stddef.h>
+#include <stdint.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 
 typedef struct {
     char *chars;
-    int len;
+    uint32_t len;
 } Row;
 
 typedef struct {
     Row *rows;
-    int num_rows;
+    uint32_t num_rows;
 } Buffer;
 
 typedef enum {
     NORMAL_MODE,
-    INSERT_MODE
+    INSERT_MODE,
+	COMMAND_MODE
 } Mode;
 
 /* globals shared between vimmy.c and main.c */
+extern char* filename;
+extern char cmd_buf[80]; 			// buffer to hold what is typed after : in a command
+extern uint32_t cmd_len;			// length of curr command
+
 extern struct winsize window_size;
 extern struct termios orig_termios;
-extern int cx, cy;
+extern uint32_t cx, cy;
 extern Mode mode;
 
 /* helper functions defined in vimmy.c */
@@ -40,7 +46,7 @@ void enableRawMode(void);
  */
 void refreshScreen(Buffer *buf);
 
-int getWindowSize(void);
+int32_t getWindowSize(void);
 
 /*
  * This func is written by ai. essentially reads a file and expands array if we
@@ -51,24 +57,19 @@ void openFile(Buffer *buf, const char *filename);
 /*
  * used for backspace in insert mode
  */
-void row_delete_char(Row *row, int cx);
+void row_delete_char(Row *row, uint32_t cx);
 
 /*
  * used for dd in normal mode
  */
-void buffer_delete_row(Buffer *buf, int cy);
+void buffer_delete_row(Buffer *buf, uint32_t cy);
 
 /*
  * used for enter in insert mode
  */
-<<<<<<< Updated upstream
-void buffer_insert_row(Buffer *buf, int at_idx, char* text, size_t len);
-=======
 void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len);
 
 /*
  * used to save file with :w
  */
-
 void saveFile(Buffer *buf);
->>>>>>> Stashed changes
