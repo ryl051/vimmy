@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
 
         read(STDIN_FILENO, &c, 1);
 
-        // normal mode
         if (mode == NORMAL_MODE) {
             switch (c) {
                 case 'h': {
@@ -57,7 +56,6 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case 'd': {
-                    // wait for another input if we're trying to delete
                     while (1) {
                         char cc;
                         refreshScreen(&buf);
@@ -77,7 +75,6 @@ int main(int argc, char *argv[]) {
 					break;
 				}
             }
-            // insert mode
         } else if (mode == INSERT_MODE) {
             switch (c) {
                 case '\x1b': {
@@ -85,7 +82,6 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-				// backspace
                 case '\b':
                 case '\x7f': {
                     if (cx > 0) {
@@ -99,14 +95,11 @@ int main(int argc, char *argv[]) {
 				case '\n': {
 					Row *row = &buf.rows[cy];
 
-					// split the current row at character cx
-					// aka everything from cx + 1 goes onto new line
 					char *split_text = &row->chars[cx];
 					uint32_t split_len = row->len - cx;
 
 					buffer_insert_row(&buf, cy + 1, split_text, split_len);
 
-					// truncate the original row
 					row = &buf.rows[cy];
 					row->len = cx;
 					row->chars = realloc(row->chars, row->len + 1);
@@ -117,20 +110,17 @@ int main(int argc, char *argv[]) {
 					break;
 				}
                 default: {
-                    // insert actual character
                     Row *row = &buf.rows[cy];
-                    row->chars = realloc(row->chars, row->len + 2); // +1 for new char, +1 for '\0'
-                    memmove(&row->chars[cx + 1], &row->chars[cx], row->len - cx + 1); // shift right (includes '\0')
+                    row->chars = realloc(row->chars, row->len + 2);
+                    memmove(&row->chars[cx + 1], &row->chars[cx], row->len - cx + 1);
                     row->chars[cx] = c;
                     row->len++;
                     cx++;
                     break;
                 }
             }
-		// COMMAND MODE
         } else {
 			switch(c) {
-				// escape to cancel the command
 				case '\x1b': {
 					mode = NORMAL_MODE;
 					break;
@@ -158,7 +148,6 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 				default: {
-					// prevent buffer overflow
 					if (cmd_len < (int)sizeof(cmd_buf) - 1) {
 						cmd_buf[cmd_len++] = c;
 						cmd_buf[cmd_len] = '\0';
