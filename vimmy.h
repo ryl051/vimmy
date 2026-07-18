@@ -65,6 +65,11 @@ void row_delete_char(Row *row, uint32_t cx);
 void buffer_delete_row(Buffer *buf, uint32_t cy);
 
 /*
+ * dw
+ */
+void buffer_delete_word(Buffer *buf, uint32_t cx);
+
+/*
  * used for enter in insert mode
  */
 void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len);
