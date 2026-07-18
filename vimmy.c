@@ -59,9 +59,9 @@ void refreshScreen(Buffer *buf) {
 	} else {
 		char* status;
 		if (mode == NORMAL_MODE) {
-			status = "-- INSERT --";
-		} else {
 			status = "-- NORMAL --";
+		} else {
+			status = "-- INSERT --";
 		}
 		write(STDOUT_FILENO, status, strlen(status));
 	}
@@ -143,6 +143,28 @@ void buffer_delete_row(Buffer *buf, uint32_t cy) {
     } else {
         buf->rows = realloc(buf->rows, sizeof(Row) * buf->num_rows);
     }
+}
+
+void buffer_delete_word(Buffer *buf, uint32_t cx) {
+    Row *row = &buf->rows[cy];
+    if (cx >= row->len) {
+        return;
+    }
+
+    uint32_t end_idx = cx;
+    while (row->chars[end_idx] != ' ' && end_idx < row->len) {
+        end_idx++;
+    }
+
+    while (row->chars[end_idx] == ' ' && end_idx < row->len) {
+        end_idx++;
+    }
+
+    uint32_t count = end_idx - cx;
+    uint32_t remaining_bytes = row->len - end_idx + 1;
+    memmove(&row->chars[cx], &row->chars[end_idx], remaining_bytes);
+    row->len -= count;
+    row->chars = realloc(row->chars, row->len + 1);
 }
 
 void buffer_insert_row(Buffer *buf, uint32_t at_idx, char* text, size_t len) {

@@ -8,7 +8,10 @@ int main(int argc, char *argv[]) {
     enableRawMode();
     getWindowSize();
 
-    Buffer buf = {NULL, 0};
+    Buffer buf = {
+        .rows     = NULL,
+        .num_rows = 0
+    };
     if (argc >= 2) {
         openFile(&buf, argv[1]);
 		filename = argv[1];
@@ -42,9 +45,6 @@ int main(int argc, char *argv[]) {
                         cx++;
                     break;
                 }
-                case 'q': {
-                    return 0;
-                }
                 case 'i': {
                     mode = INSERT_MODE;
                     break;
@@ -56,17 +56,19 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case 'd': {
-                    while (1) {
-                        char cc;
-                        refreshScreen(&buf);
-                        read(STDIN_FILENO, &cc, 1);
-                        switch (cc) {
-                            case 'd': {
-                                buffer_delete_row(&buf, cy);
-                                break;
-                            }
+                    char cc;
+                    read(STDIN_FILENO, &cc, 1);
+                    switch (cc) {
+                        case 'd': {
+                            buffer_delete_row(&buf, cy);
+                            break;
+                        }
+                        case 'w': {
+                            buffer_delete_word(&buf, cx);
+                            break;
                         }
                     }
+                    break;
                 }
 				case ':': {
 					mode = COMMAND_MODE;
