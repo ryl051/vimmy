@@ -22,7 +22,8 @@ int main(int argc, char *argv[]) {
         refreshScreen(&buf);
 
         read(STDIN_FILENO, &c, 1);
-
+        
+        Row* row = &buf.rows[cy];
         if (mode == NORMAL_MODE) {
             switch (c) {
                 case 'h': {
@@ -31,7 +32,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case 'j': {
-                    if (cy + 1 < window_size.ws_row)
+                    if (cy + 1 < window_size.ws_row && cy < buf.num_rows - 1)
                         cy++;
                     break;
                 }
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case 'l': {
-                    if (cx + 1 < window_size.ws_col)
+                    if (cx + 1 < window_size.ws_col && cx < row->len)
                         cx++;
                     break;
                 }
@@ -87,7 +88,6 @@ int main(int argc, char *argv[]) {
                 case '\b':
                 case '\x7f': {
                     if (cx > 0) {
-                        Row *row = &buf.rows[cy];
                         row_delete_char(row, cx);
                         cx--;
                     }
@@ -95,8 +95,6 @@ int main(int argc, char *argv[]) {
                 }
 				case '\r':
 				case '\n': {
-					Row *row = &buf.rows[cy];
-
 					char *split_text = &row->chars[cx];
 					uint32_t split_len = row->len - cx;
 
@@ -112,7 +110,6 @@ int main(int argc, char *argv[]) {
 					break;
 				}
                 default: {
-                    Row *row = &buf.rows[cy];
                     row->chars = realloc(row->chars, row->len + 2);
                     memmove(&row->chars[cx + 1], &row->chars[cx], row->len - cx + 1);
                     row->chars[cx] = c;
